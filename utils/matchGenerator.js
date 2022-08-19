@@ -85,12 +85,16 @@ const eightPlayer = async (players, tournamentId) => {
     tournament: tournamentId,
     nextMatch: match6._id,
     nextMatchPosition: 2,
+    firstPlayer: players[6],
+    secondPlayer: players[7],
   });
   let match3 = await Match.create({
     matchNumber: 3,
     tournament: tournamentId,
     nextMatch: match6._id,
     nextMatchPosition: 1,
+    firstPlayer: players[4],
+    secondPlayer: players[5],
   });
 
   match6.previousMatchFirstPlayer = match3._id;
@@ -102,12 +106,16 @@ const eightPlayer = async (players, tournamentId) => {
     tournament: tournamentId,
     nextMatch: match5._id,
     nextMatchPosition: 2,
+    firstPlayer: players[2],
+    secondPlayer: players[3],
   });
   let match1 = await Match.create({
     matchNumber: 1,
     tournament: tournamentId,
     nextMatch: match5._id,
     nextMatchPosition: 1,
+    firstPlayer: players[0],
+    secondPlayer: players[1],
   });
 
   match5.previousMatchFirstPlayer = match1._id;

@@ -52,7 +52,7 @@ exports.incrementMatchScore = ca(async (req, res, next) => {
     match.winner = newWinner;
     if (!match.nextMatch) {
       //update tournament winner
-      tournament = await Tournament.findByIdAndUpdate(match.tournament, { winner: newWinner, isComplete: true }, { new: true });
+      tournament = await Tournament.findByIdAndUpdate(match.tournament, { winner: newWinner, isComplete: true }, { new: true }).populate('matches');
     } else if (match.nextMatchPosition === 1) {
       nextMatch = await Match.findByIdAndUpdate(match.nextMatch, { firstPlayer: newWinner }, { new: true });
     } else {
@@ -114,7 +114,7 @@ exports.undoWinner = ca(async (req, res, next) => {
 
   let previousMatch;
   //for undoing firstPlayer
-  if (req.body.playerId == match.firstPlayer._id) {
+  if (match.firstPlayer && req.body.playerId == match.firstPlayer._id) {
     //reset match.firstPlayer
     match.firstPlayer = undefined;
     match.scoreFirstPlayer = 0;
@@ -123,7 +123,7 @@ exports.undoWinner = ca(async (req, res, next) => {
     previousMatch = await Match.findById(match.previousMatchFirstPlayer);
   }
   //for undoing secondPlayer
-  else if (req.body.playerId == match.secondPlayer._id) {
+  else if (match.secondPlayer && req.body.playerId == match.secondPlayer._id) {
     match.secondPlayer = undefined;
     match.scoreFirstPlayer = 0;
     match.scoreSecondPlayer = 0;

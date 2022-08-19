@@ -15,7 +15,7 @@ exports.getTournament = ca(async (req, res, next) => {
   if (!tournament) {
     return next(new AppError('A tournament with that id was not found', 404));
   }
-  tournament.populate('matches');
+  await tournament.populate('matches');
   res.status(200).json({ tournament });
 });
 
