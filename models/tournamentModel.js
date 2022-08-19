@@ -10,6 +10,10 @@ const tournamentSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  name: {
+    type: String,
+    required: true,
+  },
   size: {
     type: Number,
     required: [true, 'tournament must have a size'],
@@ -31,7 +35,7 @@ const tournamentSchema = mongoose.Schema({
 tournamentSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'players',
-    select: '-__v -playerId'
+    select: '-__v -playerId',
   });
   next();
 });

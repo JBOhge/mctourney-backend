@@ -6,6 +6,9 @@ const ca = require('./../utils/catchAsync');
 
 exports.getMatch = ca(async (req, res, next) => {
   const match = await Match.findById(req.params.id);
+  if (!match) {
+    return next(new AppError('Invalid match id', 404));
+  }
   return res.status(200).json({ match });
 });
 
@@ -93,4 +96,52 @@ exports.canChange = ca(async (req, res, next) => {
   req.match = match;
   req.tournament = tournament;
   next();
+});
+
+exports.undoWinner = ca(async (req, res, next) => {
+  let match = req.match;
+  if (match.winner) {
+    return next(new AppError('cannot undo previous match winner if the current match has already been decided', 400));
+  }
+
+  if (!match.previousMatchFirstPlayer && !match.previousMatchSecondPlayer) {
+    return next(new AppError('cannot undo previous match winner if the current match has no previous match', 400));
+  }
+
+  if (!match.firstPlayer && !match.secondPlayer) {
+    return next(new AppError('cannot undo previous match winner if the current match has not players', 400));
+  }
+
+  let previousMatch;
+  //for undoing firstPlayer
+  if (req.body.playerId == match.firstPlayer._id) {
+    //reset match.firstPlayer
+    match.firstPlayer = undefined;
+    match.scoreFirstPlayer = 0;
+    match.scoreSecondPlayer = 0;
+
+    previousMatch = await Match.findById(match.previousMatchFirstPlayer);
+  }
+  //for undoing secondPlayer
+  else if (req.body.playerId == match.secondPlayer._id) {
+    match.secondPlayer = undefined;
+    match.scoreFirstPlayer = 0;
+    match.scoreSecondPlayer = 0;
+
+    previousMatch = await Match.findById(match.previousMatchSecondPlayer);
+  } else {
+    return next(new AppError('Invalid playerId. Cannot undo match winner.', 400));
+  }
+
+  //go to previous match and reset the winner and decrease the score of the player who was the winner by one
+  if (previousMatch.firstPlayer._id.equals(previousMatch.winner._id)) {
+    previousMatch.scoreFirstPlayer -= 1;
+  } else if (previousMatch.secondPlayer._id.equals(previousMatch.winner._id)) {
+    previousMatch.scoreSecondPlayer -= 1;
+  }
+  previousMatch.winner = undefined;
+  match = await match.save();
+  previousMatch = await previousMatch.save();
+
+  res.status(200).json({ match, previousMatch });
 });

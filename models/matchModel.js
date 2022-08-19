@@ -44,6 +44,14 @@ const matchSchema = mongoose.Schema(
       min: 1,
       max: 2,
     },
+    previousMatchFirstPlayer: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Match',
+    },
+    previousMatchSecondPlayer: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Match',
+    },
   },
   {
     toJSON: {

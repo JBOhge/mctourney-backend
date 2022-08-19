@@ -11,12 +11,16 @@ exports.getTournaments = ca(async (req, res, next) => {
 });
 
 exports.getTournament = ca(async (req, res, next) => {
-  const tournament = await Tournament.findOne({ _id: req.params.id }).populate('matches');
+  const tournament = await Tournament.findOne({ _id: req.params.id });
+  if (!tournament) {
+    return next(new AppError('A tournament with that id was not found', 404));
+  }
+  tournament.populate('matches');
   res.status(200).json({ tournament });
 });
 
 exports.createTournament = ca(async (req, res, next) => {
-  let tournament = await Tournament.create({ size: req.body.size });
+  let tournament = await Tournament.create({ size: req.body.size, name: req.body.name });
   res.status(201).json({ tournament });
 });
 
@@ -35,6 +39,9 @@ exports.startTournament = ca(async (req, res, next) => {
 
 exports.changeSize = ca(async (req, res, next) => {
   let tournament = req.tournament;
+  if (tournament.players.length > req.body.size) {
+    return next(new AppError(`There are to many players for a tournament of size ${req.body.size}`, 400));
+  }
   tournament.size = req.body.size;
   tournament = await tournament.save({ validateBeforeSave: true });
 
@@ -48,7 +55,7 @@ exports.addPlayer = ca(async (req, res, next) => {
     playerId = player._id;
   }
   let tournament = await Tournament.findById(req.params.id);
-  if (tournament.players.length >= 4) {
+  if (tournament.players.length >= tournament.size) {
     return next(new AppError(`Cannot add any more players, max players: ${tournament.size}`, 400));
   }
   tournament = await Tournament.findOneAndUpdate({ _id: req.params.id }, { $push: { players: playerId } }, { new: true });
@@ -63,6 +70,9 @@ exports.removePlayer = ca(async (req, res, next) => {
 
 exports.canChange = ca(async (req, res, next) => {
   let tournament = await Tournament.findById(req.params.id);
+  if (!tournament) {
+    return next(new AppError('No tournament with that id exists', 404));
+  }
   if (tournament.isStarted) {
     return next(new AppError('cannot change tournament or add/remove players when the tournament is started', 400));
   }
