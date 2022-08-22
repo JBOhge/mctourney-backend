@@ -2,27 +2,30 @@ const Match = require('./../models/matchModel');
 const ca = require('./catchAsync');
 
 exports.generateMatches = (size, players, tournamentId) => {
+  let playerList = [...players];
+  playerList = shuffle(playerList);
+
   switch (size) {
     case 4:
-      return fourPlayer(players, tournamentId);
+      return fourPlayer(playerList, tournamentId);
     case 8:
-      return eightPlayer(players, tournamentId);
+      return eightPlayer(playerList, tournamentId);
     case 16:
-      return sixteenPlayer(players, tournamentId);
+      return sixteenPlayer(playerList, tournamentId);
     case 32:
-      return thirtyTwoPlayer(players, tournamentId);
+      return thirtyTwoPlayer(playerList, tournamentId);
     default:
       return [];
   }
 };
 
-// const shuffle = (a) => {
-//   for (let i = a.length - 1; i > 0; i--) {
-//     const j = Math.floor(Math.random() * (i + 1));
-//     [a[i], a[j]] = [a[j], a[i]];
-//   }
-//   return a;
-// };
+const shuffle = (a) => {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
 
 const fourPlayer = async (players, tournamentId) => {
   let match3 = await Match.create({
@@ -193,12 +196,16 @@ const sixteenPlayer = async (players, tournamentId) => {
     tournament: tournamentId,
     nextMatch: match12._id,
     nextMatchPosition: 2,
+    firstPlayer: players[14],
+    secondPlayer: players[15],
   });
   let match7 = await Match.create({
     matchNumber: 7,
     tournament: tournamentId,
     nextMatch: match12._id,
     nextMatchPosition: 1,
+    firstPlayer: players[12],
+    secondPlayer: players[13],
   });
 
   match12.previousMatchFirstPlayer = match7._id;
@@ -210,51 +217,63 @@ const sixteenPlayer = async (players, tournamentId) => {
     tournament: tournamentId,
     nextMatch: match11._id,
     nextMatchPosition: 2,
+    firstPlayer: players[10],
+    secondPlayer: players[11],
   });
   let match5 = await Match.create({
     matchNumber: 5,
     tournament: tournamentId,
     nextMatch: match11._id,
     nextMatchPosition: 1,
+    firstPlayer: players[8],
+    secondPlayer: players[9],
   });
 
   match11.previousMatchFirstPlayer = match6._id;
   match11.previousMatchSecondPlayer = match5._id;
-  await match11.save()
+  await match11.save();
 
   let match4 = await Match.create({
     matchNumber: 4,
     tournament: tournamentId,
     nextMatch: match10._id,
     nextMatchPosition: 2,
+    firstPlayer: players[6],
+    secondPlayer: players[7],
   });
   let match3 = await Match.create({
     matchNumber: 3,
     tournament: tournamentId,
     nextMatch: match10._id,
     nextMatchPosition: 1,
+    firstPlayer: players[4],
+    secondPlayer: players[5],
   });
 
   match10.previousMatchFirstPlayer = match3._id;
   match10.previousMatchSecondPlayer = match4._id;
-  await match10.save()
+  await match10.save();
 
   let match2 = await Match.create({
-    matchNumber: 4,
+    matchNumber: 2,
     tournament: tournamentId,
     nextMatch: match9._id,
     nextMatchPosition: 2,
+    firstPlayer: players[2],
+    secondPlayer: players[3],
   });
   let match1 = await Match.create({
-    matchNumber: 3,
+    matchNumber: 1,
     tournament: tournamentId,
     nextMatch: match9._id,
     nextMatchPosition: 1,
+    firstPlayer: players[0],
+    secondPlayer: players[1],
   });
 
   match9.previousMatchFirstPlayer = match1._id;
   match9.previousMatchSecondPlayer = match2._id;
-  await match9.save()
+  await match9.save();
 
   let matches = [];
   matches.push(match1._id);
@@ -273,7 +292,6 @@ const sixteenPlayer = async (players, tournamentId) => {
   matches.push(match14._id);
   matches.push(match15._id);
   return matches;
-
 };
 const thirtyTwoPlayer = async (players, tournamentId) => {
   let match31 = await Match.create({
