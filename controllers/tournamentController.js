@@ -20,7 +20,12 @@ exports.getTournament = ca(async (req, res, next) => {
 });
 
 exports.createTournament = ca(async (req, res, next) => {
-  let tournament = await Tournament.create({ size: req.body.size, name: req.body.name });
+  let tournament = await Tournament.create({
+    size: req.body.size,
+    name: req.body.name,
+    matchPointsToWin: req.body.matchPointsToWin,
+    finalMatchPointsToWin: req.body.finalMatchPointsToWin,
+  });
   res.status(201).json({ tournament });
 });
 

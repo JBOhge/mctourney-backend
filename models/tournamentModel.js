@@ -26,6 +26,14 @@ const tournamentSchema = mongoose.Schema({
   },
   players: { type: [{ type: mongoose.Schema.ObjectId, ref: 'Player' }], default: [] },
   matches: { type: [{ type: mongoose.Schema.ObjectId, ref: 'Match' }], default: [] },
+  matchPointsToWin: {
+    type: Number,
+    default: 2
+  },
+  finalMatchPointsToWin: {
+    type: Number,
+    default: 2
+  },
   winner: {
     type: mongoose.Schema.ObjectId,
     ref: 'Player',
