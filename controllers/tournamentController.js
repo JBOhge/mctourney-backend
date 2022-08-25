@@ -105,7 +105,7 @@ exports.generateTournament = ca(async (req, res, next) => {
   }
   //delete old matches associated with this tournament
   await clearMatches(tournament._id);
-  const matches = MatchGenerator.generateMatches(tournament.size, tournament.players, tournament._id);
+  const matches = MatchGenerator.generateMatches(tournament.size, tournament.players, tournament._id, tournament.matchPointsToWin, tournament.finalMatchPointsToWin);
   tournament.matches = await matches;
   tournament = await tournament.save({ validateBeforeSave: true });
   await tournament.populate({
