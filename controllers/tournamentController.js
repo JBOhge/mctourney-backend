@@ -30,7 +30,8 @@ exports.createTournament = ca(async (req, res, next) => {
 });
 
 exports.deleteTournament = ca(async (req, res, next) => {
-  let tournament = await Tournament.findByIdAndDelete(req.params.id);
+  let tournament = await Tournament.findById(req.params.id);
+  await tournament.remove();
   if (!tournament) {
     return next(new AppError('No tournament with that id exists', 404));
   }

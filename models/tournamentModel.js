@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const matchModel = require('./matchModel');
+const Match = require('./matchModel');
 
 const tournamentSchema = mongoose.Schema({
   isStarted: {
@@ -28,16 +28,22 @@ const tournamentSchema = mongoose.Schema({
   matches: { type: [{ type: mongoose.Schema.ObjectId, ref: 'Match' }], default: [] },
   matchPointsToWin: {
     type: Number,
-    default: 2
+    default: 2,
   },
   finalMatchPointsToWin: {
     type: Number,
-    default: 2
+    default: 2,
   },
   winner: {
     type: mongoose.Schema.ObjectId,
     ref: 'Player',
   },
+});
+
+tournamentSchema.pre('remove', function (next) {
+  console.log('remove middleware entered');
+  Match.deleteMany({ tournament: this._id }).exec();
+  next();
 });
 
 tournamentSchema.pre(/^find/, function (next) {
