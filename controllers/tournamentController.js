@@ -39,7 +39,12 @@ exports.deleteTournament = ca(async (req, res, next) => {
 });
 
 exports.startTournament = ca(async (req, res, next) => {
-  let tournament = await Tournament.findOneAndUpdate({ _id: req.params.id }, { isStarted: true }, { new: true });
+  let tournament = await Tournament.findOne({ _id: req.params.id });
+  if (tournament.matches.length == 0) {
+    return next(new AppError('Cannot start a tournament with no matches. Please generate matches before starting.'));
+  }
+  tournament.isStarted = true;
+  tournament = await tournament.save();
   res.status(201).json({ tournament });
 });
 
@@ -49,6 +54,10 @@ exports.changeSize = ca(async (req, res, next) => {
     return next(new AppError(`There are to many players for a tournament of size ${req.body.size}`, 400));
   }
   tournament.size = req.body.size;
+
+  //remove old matches associated with this tournament
+  await clearMatches(tournament._id);
+  tournament.matches = [];
   tournament = await tournament.save({ validateBeforeSave: true });
 
   res.status(200).json({ tournament });
@@ -71,6 +80,9 @@ exports.addPlayer = ca(async (req, res, next) => {
 
 exports.removePlayer = ca(async (req, res, next) => {
   const tournament = await Tournament.findOneAndUpdate({ _id: req.params.id }, { $pull: { players: req.params.playerId } }, { new: true });
+  await clearMatches(tournament._id);
+  tournament.matches = [];
+  await tournament.save();
   res.status(200).json({ tournament });
 });
 
@@ -80,7 +92,7 @@ exports.canChange = ca(async (req, res, next) => {
     return next(new AppError('No tournament with that id exists', 404));
   }
   if (tournament.isStarted) {
-    return next(new AppError('cannot change tournament or add/remove players when the tournament is started', 400));
+    return next(new AppError('Cannot change tournament or add/remove players after a tournament is started', 400));
   }
   req.tournament = tournament;
   next();
@@ -89,8 +101,10 @@ exports.canChange = ca(async (req, res, next) => {
 exports.generateTournament = ca(async (req, res, next) => {
   let tournament = req.tournament;
   if (tournament.size > tournament.players.length) {
-    return next(new AppError('Not enought playered to generate tournament matches', 400));
+    return next(new AppError('Not enought playered to generate tournament matches. Please add more players or change the tournament size.', 400));
   }
+  //delete old matches associated with this tournament
+  await clearMatches(tournament._id);
   const matches = MatchGenerator.generateMatches(tournament.size, tournament.players, tournament._id);
   tournament.matches = await matches;
   tournament = await tournament.save({ validateBeforeSave: true });
@@ -99,4 +113,8 @@ exports.generateTournament = ca(async (req, res, next) => {
   });
 
   res.status(201).json({ tournament });
+});
+
+const clearMatches = ca(async (tournamentId) => {
+  await Match.deleteMany({ tournament: tournamentId });
 });
