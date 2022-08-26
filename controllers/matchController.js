@@ -61,6 +61,7 @@ exports.incrementMatchScore = ca(async (req, res, next) => {
   }
   //Save updated match
   match = await match.save();
+  await match.populate({path: 'winner', select: '-__v -playerId'});
 
   return res.status(200).json({ match: match, nextMatch: nextMatch, tournament: tournament });
 });

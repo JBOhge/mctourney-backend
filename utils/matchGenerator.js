@@ -318,7 +318,7 @@ const sixteenPlayer = async (players, tournamentId, matchPointsToWin, finalMatch
   matches.push(match15._id);
   return matches;
 };
-const thirtyTwoPlayer = async (players, tournamentId) => {
+const thirtyTwoPlayer = async (players, tournamentId, matchPointsToWin, finalMatchPointsToWin) => {
   let match31 = await Match.create({
     matchNumber: 31,
     tournament: tournamentId,
