@@ -47,10 +47,16 @@ tournamentSchema.pre('remove', function (next) {
 });
 
 tournamentSchema.pre(/^find/, function (next) {
-  this.populate({
-    path: 'players',
-    select: '-__v -playerId',
-  });
+  this.populate([
+    {
+      path: 'players',
+      select: '-__v -playerId',
+    },
+    {
+      path: 'winner',
+      select: '-__v -playerId',
+    },
+  ]);
   next();
 });
 

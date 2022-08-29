@@ -7,7 +7,7 @@ const playerSchema = new mongoose.Schema({
   },
   playerId: {
     type: String,
-  }
+  },
 });
 
 
