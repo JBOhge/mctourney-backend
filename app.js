@@ -21,7 +21,12 @@ if (process.env.NODE_ENV === 'development') {
 
 app.use('/api/v1/tournaments', tournamentRouter);
 app.use('/api/v1/matches', matchRouter);
+app.use('/api/v1/users', userRouter);
 
 app.use(globalErrorHandler);
+
+app.all('*', (req, res, next) => {
+  next(new AppError(`can't find ${req.originalUrl}`, 404));
+});
 
 module.exports = app;
