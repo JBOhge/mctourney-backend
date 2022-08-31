@@ -1,10 +1,13 @@
 const express = require('express');
 const tournamentController = require('./../controllers/tournamentController');
+const authController = require('./../controllers/authController');
 
 const router = express.Router();
 
 router.get('/', tournamentController.getTournaments);
 router.get('/:id', tournamentController.getTournament);
+
+router.use(authController.protectRoute);
 
 router.post('/', tournamentController.createTournament);
 router.delete('/:id', tournamentController.deleteTournament);

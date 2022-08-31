@@ -2,6 +2,7 @@ const express = require('express');
 const globalErrorHandler = require('./utils/errorHandler');
 const tournamentRouter = require('./routes/tournamentRoutes');
 const matchRouter = require('./routes/matchRoutes');
+const userRouter = require('./routes/userRoutes');
 const morgan = require('morgan');
 const cors = require('cors');
 
@@ -9,7 +10,7 @@ const cors = require('cors');
 const app = express();
 
 //CORS Configuration
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:4200', credentials: true }));
 
 //Body parser, reading data from body into req.body
 app.use(express.json({ limit: '10kb' }));
