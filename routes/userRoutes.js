@@ -11,6 +11,7 @@ router.post('/login', authController.login);
 router.post('/logout', authController.logout);
 router.post('/forgotpassword', authController.forgotPassword);
 router.patch('/resetpassword/:token', authController.resetPassword);
+router.get('/loggedincheck', authController.isLoggedIn, authController.clientCheckLoggedIn);
 
 //PROTECT ROUTE MIDDLEWARE
 //AFFECTS EVERY ROUTE AFTER THIS

@@ -80,8 +80,8 @@ exports.protectRoute = catchAsync(async (req, res, next) => {
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
-  } else if (req.headers.cookie) {
-    token = req.headers.cookie.split('=')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   if (!token) {
     return next(new AppError('You are not logged in! Please log in to get access to this resource', 401));
@@ -117,7 +117,7 @@ exports.restrictTo = (...roles) => {
   };
 };
 
-// Only for rendered pages, no errors!
+// Checking if client jwt is still valid
 exports.isLoggedIn = async (req, res, next) => {
   if (req.cookies.jwt) {
     try {
@@ -131,7 +131,7 @@ exports.isLoggedIn = async (req, res, next) => {
       }
 
       // 3) Check if user changed password after the token was issued
-      if (currentUser.changedPasswordAfter(decoded.iat)) {
+      if (currentUser.isChangedPassword(decoded.iat)) {
         return next();
       }
 
@@ -144,6 +144,13 @@ exports.isLoggedIn = async (req, res, next) => {
   }
   next();
 };
+
+exports.clientCheckLoggedIn = catchAsync(async (req, res, next) => {
+  if (res.locals.user) {
+    return res.status(200).json({ status: 'success', data: { user: res.locals.user } });
+  }
+  this.logout();
+});
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POST'd email

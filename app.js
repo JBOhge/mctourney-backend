@@ -5,6 +5,7 @@ const matchRouter = require('./routes/matchRoutes');
 const userRouter = require('./routes/userRoutes');
 const morgan = require('morgan');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 // GLOBAL MIDDLEWARE
 const app = express();
@@ -14,6 +15,9 @@ app.use(cors({ origin: 'http://localhost:4200', credentials: true }));
 
 //Body parser, reading data from body into req.body
 app.use(express.json({ limit: '10kb' }));
+
+//Cookie Parser
+app.use(cookieParser());
 
 //Development Logging
 if (process.env.NODE_ENV === 'development') {
