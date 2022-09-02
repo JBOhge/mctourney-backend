@@ -23,8 +23,10 @@ exports.createTournament = ca(async (req, res, next) => {
   let tournament = await Tournament.create({
     size: req.body.size,
     name: req.body.name,
+    owner: req.user._id,
     matchPointsToWin: req.body.matchPointsToWin,
     finalMatchPointsToWin: req.body.finalMatchPointsToWin,
+    isPublic: req.body.isPublic,
   });
   res.status(201).json({ tournament });
 });
@@ -88,12 +90,16 @@ exports.removePlayer = ca(async (req, res, next) => {
 
 exports.canChange = ca(async (req, res, next) => {
   let tournament = await Tournament.findById(req.params.id);
+  if (!tournament.owner._id.equals(req.user._id)) {
+    return next(new AppError('You are not the owner of this tournament', 401));
+  }
   if (!tournament) {
     return next(new AppError('No tournament with that id exists', 404));
   }
   if (tournament.isStarted) {
     return next(new AppError('Cannot change tournament or add/remove players after a tournament is started', 400));
   }
+
   req.tournament = tournament;
   next();
 });

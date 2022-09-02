@@ -117,6 +117,7 @@ exports.restrictTo = (...roles) => {
   };
 };
 
+
 // Checking if client jwt is still valid
 exports.isLoggedIn = async (req, res, next) => {
   if (req.cookies.jwt) {
@@ -149,7 +150,7 @@ exports.clientCheckLoggedIn = catchAsync(async (req, res, next) => {
   if (res.locals.user) {
     return res.status(200).json({ status: 'success', data: { user: res.locals.user } });
   }
-  this.logout();
+  return res.status(204).json({ status: 'success' });
 });
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {

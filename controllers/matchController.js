@@ -61,7 +61,7 @@ exports.incrementMatchScore = ca(async (req, res, next) => {
   }
   //Save updated match
   match = await match.save();
-  await match.populate({path: 'winner', select: '-__v -playerId'});
+  await match.populate({ path: 'winner', select: '-__v -playerId' });
 
   return res.status(200).json({ match: match, nextMatch: nextMatch, tournament: tournament });
 });
@@ -94,6 +94,10 @@ exports.canChange = ca(async (req, res, next) => {
   if (!tournament.isStarted) {
     return next(new AppError('cannot update matches until tournament is started', 400));
   }
+  if (!tournament.owner._id.equals(req.user._id)) {
+    return next(new AppError('You are not the owner of this tournament', 401));
+  }
+
   req.match = match;
   req.tournament = tournament;
   next();

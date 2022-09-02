@@ -10,9 +10,18 @@ const tournamentSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isPublic: {
+    type: Boolean,
+    default: true,
+  },
   name: {
     type: String,
     required: true,
+  },
+  owner: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: [true, 'tournament must have an owner'],
   },
   size: {
     type: Number,
@@ -55,6 +64,10 @@ tournamentSchema.pre(/^find/, function (next) {
     {
       path: 'winner',
       select: '-__v -playerId',
+    },
+    {
+      path: 'owner',
+      select: '-email'
     },
   ]);
   next();
