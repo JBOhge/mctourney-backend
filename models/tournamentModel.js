@@ -55,6 +55,12 @@ tournamentSchema.pre('remove', function (next) {
   next();
 });
 
+// tournamentSchema.pre(/^find/, function (next) {
+//   this.find({ isPublic: { $ne: false } });
+//   next();
+// });
+
+
 tournamentSchema.pre(/^find/, function (next) {
   this.populate([
     {
@@ -67,7 +73,7 @@ tournamentSchema.pre(/^find/, function (next) {
     },
     {
       path: 'owner',
-      select: '-email'
+      select: '-email',
     },
   ]);
   next();

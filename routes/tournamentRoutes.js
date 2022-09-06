@@ -5,12 +5,14 @@ const authController = require('./../controllers/authController');
 const router = express.Router();
 
 router.get('/', tournamentController.getTournaments);
+
+router.get('/mytournaments', authController.protectRoute, tournamentController.myTournaments);
+
 router.get('/:id', tournamentController.getTournament);
 
 router.use(authController.protectRoute);
 
 router.post('/', tournamentController.createTournament);
-
 
 router.delete('/:id', tournamentController.canChange, tournamentController.deleteTournament);
 router.patch('/:id/update', tournamentController.canChange, tournamentController.changeSize);

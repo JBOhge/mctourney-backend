@@ -6,6 +6,7 @@ const userRouter = require('./routes/userRoutes');
 const morgan = require('morgan');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const AppError = require('./utils/appError');
 
 // GLOBAL MIDDLEWARE
 const app = express();

@@ -6,7 +6,7 @@ const ca = require('./../utils/catchAsync');
 const MatchGenerator = require('../utils/matchGenerator');
 
 exports.getTournaments = ca(async (req, res, next) => {
-  const tournaments = await Tournament.find({});
+  const tournaments = await Tournament.find({ isPublic: { $ne: false } });
   res.status(200).json({ tournaments });
 });
 
@@ -17,6 +17,12 @@ exports.getTournament = ca(async (req, res, next) => {
   }
   await tournament.populate('matches');
   res.status(200).json({ tournament });
+});
+
+exports.myTournaments = ca(async (req, res, next) => {
+  const tournaments = await Tournament.find({ owner: req.user._id });
+
+  res.status(200).json({ tournaments });
 });
 
 exports.createTournament = ca(async (req, res, next) => {
