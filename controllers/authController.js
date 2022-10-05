@@ -76,7 +76,6 @@ exports.logout = (req, res) => {
 exports.protectRoute = catchAsync(async (req, res, next) => {
   // 1) Get JWT and check if it exists
   let token;
-  console.log(req.headers.cookie);
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
