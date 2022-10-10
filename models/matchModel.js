@@ -3,17 +3,11 @@ const Player = require('./playerModel');
 
 const matchSchema = mongoose.Schema(
   {
-    tournament: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Tournament',
-    },
     firstPlayer: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Player',
+      type: Player.schema,
     },
     secondPlayer: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Player',
+      type: Player.schema,
     },
     matchNumber: {
       type: Number,
@@ -32,8 +26,7 @@ const matchSchema = mongoose.Schema(
       default: 2,
     },
     winner: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Player',
+      type: Player.schema,
     },
     nextMatch: {
       type: mongoose.Schema.ObjectId,
@@ -64,6 +57,7 @@ const matchSchema = mongoose.Schema(
         delete ret.__v;
       },
     },
+    autoCreate: false,
   }
 );
 

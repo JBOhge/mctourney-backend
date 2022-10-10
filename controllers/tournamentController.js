@@ -1,6 +1,5 @@
 const Player = require('../models/playerModel');
 const Tournament = require('../models/tournamentModel');
-const Match = require('../models/matchModel');
 const AppError = require('../utils/appError');
 const ca = require('./../utils/catchAsync');
 const MatchGenerator = require('../utils/matchGenerator');
@@ -64,7 +63,6 @@ exports.changeSize = ca(async (req, res, next) => {
   tournament.size = req.body.size;
 
   //remove old matches associated with this tournament
-  await clearMatches(tournament._id);
   tournament.matches = [];
   tournament = await tournament.save({ validateBeforeSave: true });
 
@@ -72,23 +70,19 @@ exports.changeSize = ca(async (req, res, next) => {
 });
 
 exports.addPlayer = ca(async (req, res, next) => {
-  let playerId = await Player.exists({ username: req.body.username });
-  if (!playerId) {
-    const player = await Player.create({ username: req.body.username, playerId: req.body.playerId });
-    playerId = player._id;
-  }
-  let tournament = await Tournament.findById(req.params.id);
+  let tournament = req.tournament;
   if (tournament.players.length >= tournament.size) {
     return next(new AppError(`Cannot add any more players, max players: ${tournament.size}`, 400));
   }
-  tournament = await Tournament.findOneAndUpdate({ _id: req.params.id }, { $push: { players: playerId } }, { new: true });
+  const player = new Player({ username: req.body.username, playerId: req.body.playerId });
+  tournament = await Tournament.findOneAndUpdate({ _id: req.params.id }, { $push: { players: player } }, { new: true });
 
   res.status(200).json({ tournament });
 });
 
 exports.removePlayer = ca(async (req, res, next) => {
-  const tournament = await Tournament.findOneAndUpdate({ _id: req.params.id }, { $pull: { players: req.params.playerId } }, { new: true });
-  await clearMatches(tournament._id);
+  const tournament = req.tournament;
+  tournament.players.pull(req.params.playerId);
   tournament.matches = [];
   await tournament.save();
   res.status(200).json({ tournament });
@@ -96,11 +90,11 @@ exports.removePlayer = ca(async (req, res, next) => {
 
 exports.canChange = ca(async (req, res, next) => {
   let tournament = await Tournament.findById(req.params.id);
-  if (!tournament.owner._id.equals(req.user._id)) {
-    return next(new AppError('You are not the owner of this tournament', 401));
-  }
   if (!tournament) {
     return next(new AppError('No tournament with that id exists', 404));
+  }
+  if (!tournament.owner._id.equals(req.user._id)) {
+    return next(new AppError('You are not the owner of this tournament', 401));
   }
   if (tournament.isStarted) {
     return next(new AppError('Cannot change tournament or add/remove players after a tournament is started', 400));
@@ -115,18 +109,15 @@ exports.generateTournament = ca(async (req, res, next) => {
   if (tournament.size > tournament.players.length) {
     return next(new AppError('Not enought playered to generate tournament matches. Please add more players or change the tournament size.', 400));
   }
-  //delete old matches associated with this tournament
-  await clearMatches(tournament._id);
-  const matches = MatchGenerator.generateMatches(tournament.size, tournament.players, tournament._id, tournament.matchPointsToWin, tournament.finalMatchPointsToWin);
-  tournament.matches = await matches;
+  await tournament.populate([
+    {
+      path: 'players',
+      select: '-__v -playerId',
+    },
+  ]);
+  const matches = MatchGenerator.generateMatches(tournament);
+  tournament.matches = matches;
   tournament = await tournament.save({ validateBeforeSave: true });
-  await tournament.populate({
-    path: 'matches',
-  });
 
   res.status(201).json({ tournament });
-});
-
-const clearMatches = ca(async (tournamentId) => {
-  await Match.deleteMany({ tournament: tournamentId });
 });

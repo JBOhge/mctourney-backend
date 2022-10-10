@@ -4,12 +4,12 @@ const authController = require('./../controllers/authController');
 
 const router = express.Router();
 
-router.get('/:id', matchController.getMatch);
+// router.get('/:matchId', matchController.getMatch);
 
-router.use(authController.protectRoute);
+// router.use(authController.protectRoute);
 
-router.put('/:id/increment', matchController.canChange, matchController.incrementMatchScore);
-router.put('/:id/decrement', matchController.canChange, matchController.decrementMatchScore);
-router.put('/:id/undo', matchController.canChange, matchController.undoWinner);
+router.put('/:tournamentId/:matchId/increment', matchController.canChange, matchController.incrementMatchScore);
+router.put('/:tournamentId/:matchId/decrement', matchController.canChange, matchController.decrementMatchScore);
+router.put('/:tournamentId/:matchId/undo', matchController.canChange, matchController.undoWinner);
 
 module.exports = router;

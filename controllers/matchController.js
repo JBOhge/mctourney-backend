@@ -1,16 +1,15 @@
 const Player = require('../models/playerModel');
 const Tournament = require('../models/tournamentModel');
-const Match = require('../models/matchModel');
 const AppError = require('../utils/appError');
 const ca = require('./../utils/catchAsync');
 
-exports.getMatch = ca(async (req, res, next) => {
-  const match = await Match.findById(req.params.id);
-  if (!match) {
-    return next(new AppError('Invalid match id', 404));
-  }
-  return res.status(200).json({ match });
-});
+// exports.getMatch = ca(async (req, res, next) => {
+//   const match = await Match.findById(req.params.id);
+//   if (!match) {
+//     return next(new AppError('Invalid match id', 404));
+//   }
+//   return res.status(200).json({ match });
+// });
 
 exports.incrementMatchScore = ca(async (req, res, next) => {
   let match = req.match;
@@ -86,16 +85,20 @@ exports.decrementMatchScore = ca(async (req, res, next) => {
 });
 
 exports.canChange = ca(async (req, res, next) => {
-  let match = await Match.findById(req.params.id);
+  let tournament = await Tournament.findById(req.params.tournamentId);
+  if (!tournament) {
+    return next(new AppError('No tournament with that Id found', 404));
+  }
+  // if (!tournament.isStarted) {
+  //   return next(new AppError('cannot update matches until tournament is started', 400));
+  // }
+  // if (!tournament.owner._id.equals(req.user._id)) {
+  //   return next(new AppError('You are not the owner of this tournament', 401));
+  // }
+
+  let match = await tournament.matches.id(req.params.matchId);
   if (!match) {
-    return next(new AppError('Invalid match id', 400));
-  }
-  let tournament = await Tournament.findById(match.tournament);
-  if (!tournament.isStarted) {
-    return next(new AppError('cannot update matches until tournament is started', 400));
-  }
-  if (!tournament.owner._id.equals(req.user._id)) {
-    return next(new AppError('You are not the owner of this tournament', 401));
+    return next(new AppError('No match with that ID found', 404));
   }
 
   req.match = match;
