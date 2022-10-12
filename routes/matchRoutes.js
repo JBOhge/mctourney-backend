@@ -6,7 +6,7 @@ const router = express.Router();
 
 // router.get('/:matchId', matchController.getMatch);
 
-// router.use(authController.protectRoute);
+router.use(authController.protectRoute);
 
 router.put('/:tournamentId/:matchId/increment', matchController.canChange, matchController.incrementMatchScore);
 router.put('/:tournamentId/:matchId/decrement', matchController.canChange, matchController.decrementMatchScore);

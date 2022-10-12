@@ -5,7 +5,7 @@ const ca = require('./../utils/catchAsync');
 const MatchGenerator = require('../utils/matchGenerator');
 
 exports.getTournaments = ca(async (req, res, next) => {
-  const tournaments = await Tournament.find({ isPublic: { $ne: false } });
+  const tournaments = await Tournament.find({ isPublic: { $ne: false } }).select('-matches');
   res.status(200).json({ tournaments });
 });
 
