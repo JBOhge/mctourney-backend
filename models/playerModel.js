@@ -1,14 +1,18 @@
 const mongoose = require('mongoose');
 
-const playerSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: [true, 'players require a username'],
+const playerSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: [true, 'players require a username'],
+    },
+    playerId: {
+      type: String,
+    },
   },
-  playerId: {
-    type: String,
-  },
-});
-
+  {
+    autoCreate: false,
+  }
+);
 
 module.exports = mongoose.model('Player', playerSchema);

@@ -1,19 +1,19 @@
 const Player = require('../models/playerModel');
 const Tournament = require('../models/tournamentModel');
-const Match = require('../models/matchModel');
 const AppError = require('../utils/appError');
 const ca = require('./../utils/catchAsync');
 
-exports.getMatch = ca(async (req, res, next) => {
-  const match = await Match.findById(req.params.id);
-  if (!match) {
-    return next(new AppError('Invalid match id', 404));
-  }
-  return res.status(200).json({ match });
-});
+// exports.getMatch = ca(async (req, res, next) => {
+//   const match = await Match.findById(req.params.id);
+//   if (!match) {
+//     return next(new AppError('Invalid match id', 404));
+//   }
+//   return res.status(200).json({ match });
+// });
 
 exports.incrementMatchScore = ca(async (req, res, next) => {
   let match = req.match;
+  let tournament = req.tournament;
 
   //Check if there is already a winner for this match
   if (match.winner) {
@@ -38,36 +38,39 @@ exports.incrementMatchScore = ca(async (req, res, next) => {
   let newWinner;
   //if first player is the winner
   if (match.scoreFirstPlayer === match.pointsToWin) {
-    newWinner = match.firstPlayer._id;
+    newWinner = match.firstPlayer;
   }
   //if second player is the winner
   else if (match.scoreSecondPlayer === match.pointsToWin) {
-    newWinner = match.secondPlayer._id;
+    newWinner = match.secondPlayer;
   }
 
   let nextMatch;
-  let tournament;
   //Process winner, put winning player in next match
   if (newWinner) {
     match.winner = newWinner;
     if (!match.nextMatch) {
       //update tournament winner
-      tournament = await Tournament.findByIdAndUpdate(match.tournament, { winner: newWinner, isComplete: true }, { new: true }).populate('matches');
+      tournament.winner = newWinner;
+      tournament.isComplete = true;
     } else if (match.nextMatchPosition === 1) {
-      nextMatch = await Match.findByIdAndUpdate(match.nextMatch, { firstPlayer: newWinner }, { new: true });
+      nextMatch = await tournament.matches.id(match.nextMatch);
+      nextMatch.firstPlayer = newWinner;
     } else {
-      nextMatch = await Match.findByIdAndUpdate(match.nextMatch, { secondPlayer: newWinner }, { new: true });
+      nextMatch = await tournament.matches.id(match.nextMatch);
+      nextMatch.secondPlayer = newWinner;
     }
   }
+
   //Save updated match
-  match = await match.save();
-  await match.populate({ path: 'winner', select: '-__v -playerId' });
+  await tournament.save();
 
   return res.status(200).json({ match: match, nextMatch: nextMatch, tournament: tournament });
 });
 
 exports.decrementMatchScore = ca(async (req, res, next) => {
   let match = req.match;
+  let tournament = req.tournament;
   if (match.winner) {
     next(new AppError('cannot decrement match score if the winner has already been decided'));
   }
@@ -80,22 +83,26 @@ exports.decrementMatchScore = ca(async (req, res, next) => {
     return next(new AppError('Invalid playerId. Cannot increment match score.', 400));
   }
 
-  match = await match.save();
+  await tournament.save();
 
   res.status(200).json({ match });
 });
 
 exports.canChange = ca(async (req, res, next) => {
-  let match = await Match.findById(req.params.id);
-  if (!match) {
-    return next(new AppError('Invalid match id', 400));
+  let tournament = await Tournament.findById(req.params.tournamentId);
+  if (!tournament) {
+    return next(new AppError('No tournament with that Id found', 404));
   }
-  let tournament = await Tournament.findById(match.tournament);
   if (!tournament.isStarted) {
     return next(new AppError('cannot update matches until tournament is started', 400));
   }
   if (!tournament.owner._id.equals(req.user._id)) {
     return next(new AppError('You are not the owner of this tournament', 401));
+  }
+
+  let match = await tournament.matches.id(req.params.matchId);
+  if (!match) {
+    return next(new AppError('No match with that ID found', 404));
   }
 
   req.match = match;
@@ -104,6 +111,7 @@ exports.canChange = ca(async (req, res, next) => {
 });
 
 exports.undoWinner = ca(async (req, res, next) => {
+  let tournament = req.tournament;
   let match = req.match;
   if (match.winner) {
     return next(new AppError('cannot undo previous match winner if the current match has already been decided', 400));
@@ -114,7 +122,7 @@ exports.undoWinner = ca(async (req, res, next) => {
   }
 
   if (!match.firstPlayer && !match.secondPlayer) {
-    return next(new AppError('cannot undo previous match winner if the current match has not players', 400));
+    return next(new AppError('cannot undo previous match winner if the current match has no players', 400));
   }
 
   let previousMatch;
@@ -125,7 +133,7 @@ exports.undoWinner = ca(async (req, res, next) => {
     match.scoreFirstPlayer = 0;
     match.scoreSecondPlayer = 0;
 
-    previousMatch = await Match.findById(match.previousMatchFirstPlayer);
+    previousMatch = await tournament.matches.id(match.previousMatchFirstPlayer);
   }
   //for undoing secondPlayer
   else if (match.secondPlayer && req.body.playerId == match.secondPlayer._id) {
@@ -133,7 +141,7 @@ exports.undoWinner = ca(async (req, res, next) => {
     match.scoreFirstPlayer = 0;
     match.scoreSecondPlayer = 0;
 
-    previousMatch = await Match.findById(match.previousMatchSecondPlayer);
+    previousMatch = await tournament.matches.id(match.previousMatchSecondPlayer);
   } else {
     return next(new AppError('Invalid playerId. Cannot undo match winner.', 400));
   }
@@ -145,8 +153,7 @@ exports.undoWinner = ca(async (req, res, next) => {
     previousMatch.scoreSecondPlayer -= 1;
   }
   previousMatch.winner = undefined;
-  match = await match.save();
-  previousMatch = await previousMatch.save();
+  tournament = await tournament.save();
 
-  res.status(200).json({ match, previousMatch });
+  res.status(200).json({ match, previousMatch, tournament });
 });
